@@ -5,6 +5,8 @@ import logging
 import os
 import json
 import threading
+import signal
+import faulthandler
 
 from wsgiref.simple_server import make_server
 from prometheus_client import make_wsgi_app, Gauge
@@ -85,7 +87,11 @@ def get_gpu_count(path):
         return 0
 
 
+def register_stack_trace_dump():
+    faulthandler.register(signal.SIGTRAP, all_threads=True, chain=False)
+
 def main(args):
+    register_stack_trace_dump()
     config_environ()
     try_remove_old_prom_file(args.log + "/gpu_exporter.prom")
     try_remove_old_prom_file(args.log + "/job_exporter.prom")
